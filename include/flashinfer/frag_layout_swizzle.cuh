@@ -16,24 +16,40 @@
 #ifndef FLASHINFER_FRAG_LAYOUT_SWIZZLE_CUH_
 #define FLASHINFER_FRAG_LAYOUT_SWIZZLE_CUH_
 
+#ifdef USE_ROCM
+
+#include <hip/hip_runtime.h>
+
+#ifndef FULL_MASK
+#define FULL_MASK 0xffffffffffffffff
+#endif
+
+#else
+
 #include <cuda_runtime.h>
+
+#ifndef FULL_MASK
+#define FULL_MASK 0xffffffff
+#endif
+
+#endif // USE_ROCM
 
 #include <cstdint>
 
 __device__ __forceinline__ uint32_t frag_layout_swizzle_16b_to_8b(uint32_t x) {
-  uint32_t tmp = __shfl_xor_sync(0xffffffff, x, 0x1);
+  uint32_t tmp = __shfl_xor_sync(FULL_MASK, x, 0x1);
   x = __byte_perm(x, tmp, ((threadIdx.x & 0x1) == 0) ? 0x5410 : 0x3276);
-  tmp = __shfl_xor_sync(0xffffffff, x, 0x2);
+  tmp = __shfl_xor_sync(FULL_MASK, x, 0x2);
   x = __byte_perm(x, tmp, ((threadIdx.x & 0x2) == 0) ? 0x5410 : 0x3276);
   return x;
 }
 
 __device__ __forceinline__ uint32_t frag_layout_swizzle_16b_to_8b_trans(uint32_t x) {
-  uint32_t tmp = __shfl_xor_sync(0xffffffff, x, 0x4);
+  uint32_t tmp = __shfl_xor_sync(FULL_MASK, x, 0x4);
   x = __byte_perm(x, tmp, ((threadIdx.x & 0x4) == 0) ? 0x6420 : 0x3175);
-  tmp = __shfl_xor_sync(0xffffffff, x, 0x8);
+  tmp = __shfl_xor_sync(FULL_MASK, x, 0x8);
   x = __byte_perm(x, tmp, ((threadIdx.x & 0x8) == 0) ? 0x5410 : 0x3276);
-  tmp = __shfl_xor_sync(0xffffffff, x, 0x10);
+  tmp = __shfl_xor_sync(FULL_MASK, x, 0x10);
   x = __byte_perm(x, tmp, ((threadIdx.x & 0x10) == 0) ? 0x5410 : 0x3276);
   return x;
 }

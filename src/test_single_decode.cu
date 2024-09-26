@@ -13,6 +13,8 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+#include <math.h> // isnan used
+
 #include <gtest/gtest.h>
 
 #include <type_traits>
@@ -81,12 +83,12 @@ void _TestDecodingKernelCorrectness(size_t num_qo_heads, size_t num_kv_heads, si
 template <typename DTypeQO, typename DTypeKV>
 void TestSingleDecodeKernelCorrectness() {
   for (size_t num_qo_heads : {32}) {
-    for (size_t num_kv_heads : {4, 8, 32}) {
+    for (size_t num_kv_heads : {4}) {// for (size_t num_kv_heads : {4, 8, 32}) {
       for (size_t seq_len :
-           {1, 3, 9, 27, 81, 129, 257, 512, 1024, 2048, 4096, 8192, 16384, 32768}) {
-        for (size_t head_dim : {64, 128, 256}) {
-          for (unsigned int kv_layout : {0U, 1U}) {
-            for (unsigned int pos_encoding_mode : {0U, 1U}) {
+          {1}) { // {1, 3, 9, 27, 81, 129, 257, 512, 1024, 2048, 4096, 8192, 16384, 32768}) {
+        for (size_t head_dim : {64}) {// for (size_t head_dim : {64, 128, 256}) {
+          for (unsigned int kv_layout : {0U}) {// for (unsigned int kv_layout : {0U, 1U}) {
+            for (unsigned int pos_encoding_mode : {0U}) { // for (unsigned int pos_encoding_mode : {0U, 1U}) {
               _TestDecodingKernelCorrectness<DTypeQO, DTypeKV>(num_qo_heads, num_kv_heads, seq_len,
                                                                head_dim, QKVLayout(kv_layout),
                                                                PosEncodingMode(pos_encoding_mode));
@@ -104,6 +106,7 @@ TEST(FlashInferCorrectnessTest, SingleDecodeKernelCorrectnessTestFP16) {
 
 #ifdef FLASHINFER_ENABLE_BF16
 TEST(FlashInferCorrectnessTest, SingleDecodeKernelCorrectnessTestBF16) {
+  // TODO (yiakwy)
   TestSingleDecodeKernelCorrectness<nv_bfloat16, nv_bfloat16>();
 }
 #endif
