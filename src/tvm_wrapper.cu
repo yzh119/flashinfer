@@ -245,7 +245,7 @@ void _FlashInferAttentionPrefillWithPagedKVCache(int64_t handler_id, DLTensor* q
           output->dtype, dtype_out, {DISPATCH_TVM_CUDA_IDTYPE(page_table_values->dtype, dtype_idx, {
             paged_kv_t<page_storage, dtype_in, dtype_idx> cache(
                 nhead_kv, page_size, nfeat, num_total_seqs, kv_layout,
-                static_cast<dtype_in*>(pages->data),
+                static_cast<dtype_in*>(pages->data) + pages->byte_offset / sizeof(dtype_in),
                 static_cast<dtype_idx*>(page_table_values->data) +
                     page_table_values->byte_offset / sizeof(dtype_idx),
                 static_cast<dtype_idx*>(page_table_indptr->data) +
@@ -397,7 +397,7 @@ void _FlashInferAttentionDecodeWithPagedKVCache(int64_t handler_id, DLTensor* q_
           output->dtype, dtype_out, {DISPATCH_TVM_CUDA_IDTYPE(page_table_values->dtype, dtype_idx, {
             paged_kv_t<page_storage, dtype_in, dtype_idx> cache(
                 nhead_kv, page_size, nfeat, num_total_seqs, kv_layout,
-                static_cast<dtype_in*>(pages->data),
+                static_cast<dtype_in*>(pages->data) + pages->byte_offset / sizeof(dtype_in),
                 static_cast<dtype_idx*>(page_table_values->data) +
                     page_table_values->byte_offset / sizeof(dtype_idx),
                 static_cast<dtype_idx*>(page_table_indptr->data) +
