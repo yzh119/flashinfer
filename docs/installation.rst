@@ -155,7 +155,7 @@ You can follow the steps below to install FlashInfer from source code:
            .. code-block:: bash
 
                cd flashinfer
-               TORCH_CUDA_ARCH_LIST="7.5 8.0 8.9 9.0a 10.0 12.0" FLASHINFER_ENABLE_AOT=1 pip install --no-build-isolation --verbose --editable .
+               TORCH_CUDA_ARCH_LIST="7.5 8.0 8.9 9.0a 10.0 12.0 12.0a" FLASHINFER_ENABLE_AOT=1 pip install --no-build-isolation --verbose --editable .
 
 5. Create FlashInfer distributions (optional):
 
@@ -182,7 +182,7 @@ You can follow the steps below to install FlashInfer from source code:
            .. code-block:: bash
 
                cd flashinfer
-               TORCH_CUDA_ARCH_LIST="7.5 8.0 8.9 9.0a 10.0 12.0" FLASHINFER_ENABLE_AOT=1 python -m build --no-isolation --wheel
+               TORCH_CUDA_ARCH_LIST="7.5 8.0 8.9 9.0a 10.0 12.0 12.0a" FLASHINFER_ENABLE_AOT=1 python -m build --no-isolation --wheel
                ls -la dist/
 
 C++ API
