@@ -14,7 +14,6 @@ See the License for the specific language governing permissions and
 limitations under the License.
 """
 
-import numpy
 import pytest
 import torch
 from alibi_reference import alibi_attention
@@ -45,7 +44,7 @@ def warmup_jit():
                     [0, 2],  # pos_encoding_modes
                     [False],  # use_sliding_windows
                     [False],  # use_logits_soft_caps
-                    [False],  # allow_fp16_qk_reductions
+                    [False],  # use_fp16_qk_reductions
                 )
             )
         except Exception as e:

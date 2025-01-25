@@ -2,8 +2,8 @@ import logging
 import os
 import re
 from pathlib import Path
-from typing import List, Union
-
+from typing import List, Union, Optional
+from contextlib import suppress
 import torch.utils.cpp_extension as torch_cpp_ext
 from filelock import FileLock
 
@@ -26,7 +26,7 @@ class FlashInferJITLogger(logging.Logger):
         log_path = FLASHINFER_WORKSPACE_DIR / "flashinfer_jit.log"
         if not os.path.exists(log_path):
             # create an empty file
-            with open(log_path, "w") as f:
+            with open(log_path, "w") as f:  # noqa: F841
                 pass
         self.addHandler(logging.FileHandler(log_path))
         # set the format of the log
@@ -69,7 +69,7 @@ def remove_unwanted_pytorch_nvcc_flags():
         try:
             torch_cpp_ext.COMMON_NVCC_FLAGS.remove(flag)
         except ValueError:
-            pass
+            suppress(ValueError)
 
 
 remove_unwanted_pytorch_nvcc_flags()
@@ -80,12 +80,17 @@ sm90a_nvcc_flags = ["-gencode", "arch=compute_90a,code=sm_90a"]
 def load_cuda_ops(
     name: str,
     sources: List[Union[str, Path]],
-    extra_cflags: List[str] = [],
-    extra_cuda_cflags: List[str] = [],
+    extra_cflags: Optional[List[str]] = None,
+    extra_cuda_cflags: Optional[List[str]] = None,
     extra_ldflags=None,
     extra_include_paths=None,
     verbose=False,
 ):
+    if extra_cflags is None:
+        extra_cflags = []
+    if extra_cuda_cflags is None:
+        extra_cuda_cflags = []
+
     cflags = ["-O3", "-Wno-switch-bool"]
     cuda_cflags = [
         "-O3",
@@ -93,6 +98,7 @@ def load_cuda_ops(
         "--threads",
         "4",
         "-use_fast_math",
+        "-DFLASHINFER_ENABLE_F16",
         "-DFLASHINFER_ENABLE_BF16",
         "-DFLASHINFER_ENABLE_FP8_E4M3",
         "-DFLASHINFER_ENABLE_FP8_E5M2",
@@ -104,10 +110,11 @@ def load_cuda_ops(
     build_directory = FLASHINFER_JIT_DIR / name
     os.makedirs(build_directory, exist_ok=True)
     if extra_include_paths is None:
-        extra_include_paths = [
-            FLASHINFER_INCLUDE_DIR,
-            FLASHINFER_CSRC_DIR,
-        ] + CUTLASS_INCLUDE_DIRS
+        extra_include_paths = []
+    extra_include_paths += [
+        FLASHINFER_INCLUDE_DIR,
+        FLASHINFER_CSRC_DIR,
+    ] + CUTLASS_INCLUDE_DIRS
     lock = FileLock(FLASHINFER_JIT_DIR / f"{name}.lock", thread_local=False)
     with lock:
         module = torch_cpp_ext.load(

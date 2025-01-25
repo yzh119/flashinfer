@@ -17,11 +17,7 @@ limitations under the License.
 import argparse
 from pathlib import Path
 
-from .literal_map import (
-    bool_literal,
-    mask_mode_literal,
-    pos_encoding_mode_literal,
-)
+from .literal_map import bool_literal, mask_mode_literal, pos_encoding_mode_literal
 
 
 def get_dispatch_inc_str(args: argparse.Namespace) -> str:
@@ -34,6 +30,17 @@ def get_dispatch_inc_str(args: argparse.Namespace) -> str:
     )
     dispatch_head_dims_str = f"""#define _DISPATCH_CASES_head_dim(case_var, ...)         \\
 {dispatch_head_dims_entries}
+// EOL
+"""
+    # head dims for sm90
+    dispatch_head_dims_sm90_entries = "\n".join(
+        [
+            "  _DISPATCH_CASE({}, case_var, __VA_ARGS__) \\".format(_)
+            for _ in args.head_dims_sm90
+        ]
+    )
+    dispatch_head_dims_sm90_str = f"""#define _DISPATCH_CASES_head_dim_sm90(case_var, ...)         \\
+{dispatch_head_dims_sm90_entries}
 // EOL
 """
     # positional encoding modes
@@ -50,14 +57,14 @@ def get_dispatch_inc_str(args: argparse.Namespace) -> str:
 // EOL
 """
     # allow fp16 qk reductions
-    dispatch_allow_fp16_qk_reduction_entries = "\n".join(
+    dispatch_use_fp16_qk_reduction_entries = "\n".join(
         [
             "  _DISPATCH_CASE({}, case_var, __VA_ARGS__) \\".format(bool_literal[_])
-            for _ in args.allow_fp16_qk_reductions
+            for _ in args.use_fp16_qk_reductions
         ]
     )
-    dispatch_allow_fp16_qk_reductions_str = f"""#define _DISPATCH_CASES_allow_fp16_qk_reduction(case_var, ...)         \\
-{dispatch_allow_fp16_qk_reduction_entries}
+    dispatch_use_fp16_qk_reductions_str = f"""#define _DISPATCH_CASES_use_fp16_qk_reduction(case_var, ...)         \\
+{dispatch_use_fp16_qk_reduction_entries}
 // EOL
 """
     # mask_mode
@@ -77,8 +84,9 @@ def get_dispatch_inc_str(args: argparse.Namespace) -> str:
     return "\n".join(
         [
             dispatch_head_dims_str,
+            dispatch_head_dims_sm90_str,
             dispatch_pos_encoding_modes_str,
-            dispatch_allow_fp16_qk_reductions_str,
+            dispatch_use_fp16_qk_reductions_str,
             dispatch_mask_mode_str,
         ]
     )
@@ -100,7 +108,7 @@ if __name__ == "__main__":
         help="Position encoding modes",
     )
     parser.add_argument(
-        "--allow_fp16_qk_reductions",
+        "--use_fp16_qk_reductions",
         type=lambda x: x if isinstance(x, int) else x.lower() == "true",
         required=True,
         nargs="+",
